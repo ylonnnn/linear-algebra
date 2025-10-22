@@ -26,10 +26,7 @@ public:
   constexpr size_t n() const { return M * N; }
 
   real entry(size_t i, size_t j) const {
-    assert(i <= M);
-    assert(j <= N);
-
-    return container_[i - 1][j - 1];
+    return const_cast<matrix &>(*this)->entry(i, j);
   }
 
   real &entry(size_t i, size_t j) {
