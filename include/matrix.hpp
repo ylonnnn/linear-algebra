@@ -138,21 +138,19 @@ public:
 
   matrix<M, N> invert() {
     // Inversion can only be done on square matrices
-    if constexpr (M != N)
-      return matrix<M, N>();
+    static_assert(M == N, "inversion can only be done on square matrices");
 
     // [A | In];
     matrix<M, N * 2> temp;
 
-    // Copy the current contents to the left side
+    // Copy the current contents to the left side (A)
     for (size_t i = 0; i < M; ++i)
       for (size_t j = 0; j < N; ++j) {
         real &entry = temp.entry(i + 1, j + 1);
         entry = container_[i][j];
       }
-    // temp.entry(i, j) = container_[i][j];
 
-    // Initialize the main diagonal in the right side
+    // Initialize the identity matrix (In) on the right-side
     for (size_t i = 0; i < N; ++i) {
       for (size_t j = 0; j < N; ++j) {
         real &entry = temp.entry(i + 1, N + j + 1);
