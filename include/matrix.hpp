@@ -17,6 +17,7 @@ template <size_t M, size_t N> class matrix {
 public:
   template <size_t _M = M, size_t _N = N>
   using container_type = std::array<std::array<real, _N>, _M>;
+
   using row_type = vector<N>;
   using column_type = vector<M>;
 
@@ -26,7 +27,7 @@ public:
   constexpr size_t n() const { return M * N; }
 
   real entry(size_t i, size_t j) const {
-    return const_cast<matrix &>(*this)->entry(i, j);
+    return const_cast<matrix *>(this)->entry(i, j);
   }
 
   real &entry(size_t i, size_t j) {
@@ -172,10 +173,10 @@ public:
   }
 
   /**
-   * Returns the vector of pivot indices
+   * Returns the vector of pairs of pivots and their indices
    */
-  std::vector<size_t> gaussian() {
-    std::vector<size_t> p_idcs;
+  std::vector<std::pair<real, size_t>> gaussian() {
+    std::vector<std::pair<real, size_t>> p_idcs;
     p_idcs.reserve(N);
 
     size_t p_idx = 0;
@@ -190,12 +191,16 @@ public:
             std::abs(container_[max_row][p_idx]))
           max_row = j;
 
-      elementary<1>(i + 1, max_row + 1);
+      if (max_row != i)
+        elementary<1>(i + 1, max_row + 1);
 
       std::array<real, N> &row = container_[i];
 
       // Attempt to create the pivot on the current row
       real pivot = row[p_idx];
+      for (; pivot == 0 && p_idx < N; pivot = row[++p_idx])
+        ;
+
       assert(std::abs(pivot) >= std::numeric_limits<real>::epsilon());
 
       if (pivot != 1)
@@ -212,7 +217,7 @@ public:
         elementary<3>(j + 1, i + 1, -b_pivot);
       }
 
-      p_idcs.push_back(p_idx);
+      p_idcs.push_back({pivot, p_idx});
       ++p_idx;
     }
 
@@ -220,24 +225,22 @@ public:
   }
 
   void gauss_jordan() {
-    std::vector<size_t> p_idcs = gaussian();
+    std::vector<std::pair<real, size_t>> p_idcs = gaussian();
 
     // Reduced Row Echelon Form
-    for (auto it = p_idcs.rbegin(); it != p_idcs.rend(); ++it) {
-      size_t p_idx = *it;
+    for (size_t i = p_idcs.size(); i-- > 0;) {
+      auto &[_, p_idx] = p_idcs[i];
+      auto &row = container_[i];
 
-      // If the pivot index is 0, there are no other rows above it
-      if (p_idx == 0)
-        continue;
+      // Nonzero elimination above the pivot
+      for (size_t j = i; j-- > 0;) {
+        auto &row_above = container_[j];
+        real above = row_above[p_idx];
 
-      for (size_t i = p_idx; i-- > 0;) {
-        std::array<real, N> &curr_row = container_[i];
-        real a_pivot = curr_row[p_idx];
-
-        if (a_pivot == 0)
+        if (above == 0)
           continue;
 
-        elementary<3>(i + 1, p_idx + 1, -a_pivot);
+        elementary<3>(j + 1, i + 1, -above);
       }
     }
   }
@@ -285,8 +288,8 @@ public:
     for (size_t i = 0; i < M; ++i) {
       os << "\n";
       for (size_t j = 0; j < N; ++j) {
-        os << std::setw(4) << mat.entry(i + 1, j + 1)
-           << (j == N - 1 ? "" : " ");
+        os << std::setw(6) << mat.entry(i + 1, j + 1);
+        // << (j == N - 1 ? "" : " ");
       }
     }
 

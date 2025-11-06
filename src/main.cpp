@@ -1,21 +1,21 @@
 #include <cmath>
 #include <iostream>
 
+#include "matrix.hpp"
 #include "vector.hpp"
 
 int main() {
   using namespace linear_algebra;
 
-  vector<3> x{{1, 2, 3}};
-  vector<3> y{{4, 5, 6}};
+  matrix<3, 4> equation({{
+      {1, 3, -2, 4},
+      {-1, -3, 5, 2},
+      {0, 0, 0, 0},
+  }});
 
-  std::cout << x << "\n";
-  std::cout << y << "\n";
+  equation.gauss_jordan();
 
-  real angle = x.angle_between(y);
-
-  std::cout << "degrees: " << angle * (180 / M_PI) << "\n";
-  std::cout << "radians: " << angle << "\n";
+  std::cout << equation << "\n";
 
   return 0;
 }
