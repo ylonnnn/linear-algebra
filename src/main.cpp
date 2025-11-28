@@ -21,17 +21,17 @@ void matrix_tests() {
 void vector_tests() {
   using namespace linalg;
 
-  std::vector<vector> S = {
-      vector{{1, 0, 1}},
-      vector{{2, 0, 2}},
-      vector{{1, 3, 4}},
-      vector{{-4, 0, -4}},
-  };
+  vector u = {{1, 1}}, v = {{3, 2}}, proju_v = v.projection(u);
 
-  std::vector<vector> redundancies = vector::redundant(S);
+  std::cout << u << "\n";
+  std::cout << v << "\n";
 
-  for (auto &redundancy : redundancies)
-    std::cout << redundancy << "\n";
+  std::cout << proju_v << "\n";
+
+  std::cout << (v - proju_v) << "\n";
+
+  std::cout << u.is_orthogonal(v - proju_v) << "\n";
+  std::cout << u.is_orthogonal(proju_v) << "\n";
 }
 
 int main() {

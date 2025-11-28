@@ -23,8 +23,6 @@ std::vector<vector> vector::redundant(const std::vector<vector> &set) {
   for (size_t i = 0; i < n; ++i)
     mat.column(i + 1, vector::container_type{set[i].container_});
 
-  std::cout << mat << "\n";
-
   std::map<size_t, real> pivots = mat.gauss_jordan();
   std::vector<vector> redundancies;
 
@@ -42,42 +40,19 @@ std::vector<vector> vector::redundant(const std::vector<vector> &set) {
   return redundancies;
 }
 
-bool vector::is_orthogonal_set(const std::vector<vector> &set) {
-  size_t n = set.size();
-
-  for (size_t i = 0; i < n; ++i) {
-    const vector &curr = set[i];
-
-    for (size_t j = i + 1; j < n; ++j) {
-      const vector &c_pair = set[j];
-      if (!curr.is_orthogonal(c_pair))
-        return false;
-    }
-  }
-
-  return true;
-}
-
-bool vector::is_orthonormal_set(const std::vector<vector> &set) {
-  size_t n = set.size();
-
-  for (size_t i = 0; i < n; ++i) {
-    const vector &curr = set[i];
-
-    for (size_t j = i + 1; j < n; ++j) {
-      const vector &c_pair = set[j];
-      if (!curr.is_orthonormal(c_pair))
-        return false;
-    }
-  }
-
-  return true;
-}
-
 bool vector::is_orthogonal(const vector &vec) const { return dot(vec) == 0; }
 
 bool vector::is_orthonormal(const vector &vec) const {
   return is_orthogonal(vec) && is_unit();
+}
+
+vector vector::projection(const vector &u) const {
+  if (n() != u.n()) {
+    std::cout << "error: dimension mismatch\n";
+    exit(0);
+  }
+
+  return u.mult(dot(u) / u.dot(u));
 }
 
 size_t vector::n() const { return container_.size(); }
@@ -153,6 +128,15 @@ vector vector::normalize() const {
 
 real &vector::operator[](size_t i) { return container_[i]; }
 const real &vector::operator[](size_t i) const { return container_[i]; }
+
+vector vector::operator+(const vector &b) const { return add(b); }
+
+vector vector::operator-(const vector &b) const { return add(b * -1); }
+
+vector vector::operator*(const vector &b) const { return dot(b); }
+vector vector::operator*(real b) const { return mult(b); }
+
+vector vector::operator/(real b) const { return mult(1.0 / b); }
 
 std::ostream &operator<<(std::ostream &os, const vector &vec) {
   os << "[\n";

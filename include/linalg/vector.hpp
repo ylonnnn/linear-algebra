@@ -36,11 +36,10 @@ public:
 
   static std::vector<vector> redundant(const std::vector<vector> &set);
 
-  static bool is_orthogonal_set(const std::vector<vector> &set);
-  static bool is_orthonormal_set(const std::vector<vector> &set);
-
   bool is_orthogonal(const vector &vec) const;
   bool is_orthonormal(const vector &vec) const;
+
+  vector projection(const vector &onto) const;
 
   size_t n() const;
 
@@ -69,6 +68,12 @@ public:
 
   real &operator[](size_t i);
   const real &operator[](size_t i) const;
+
+  vector operator+(const vector &b) const;
+  vector operator-(const vector &b) const;
+  vector operator*(const vector &b) const;
+  vector operator*(real b) const;
+  vector operator/(real b) const;
 
   friend std::ostream &operator<<(std::ostream &os, const vector &vec);
 
