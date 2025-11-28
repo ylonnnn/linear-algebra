@@ -1,44 +1,41 @@
 #include <cmath>
 #include <iostream>
 
-#include "matrix.hpp"
-#include "vector.hpp"
+#include "linalg/matrix.hpp"
+#include "linalg/vector.hpp"
 
 void matrix_tests() {
-  using namespace linear_algebra;
+  using namespace linalg;
 
-  matrix<2, 3> A({{
-      {2, 3, -1},
-      {1, 0, 2},
-  }});
+  matrix A{{
+      {1, 2, 1, -4},
+      {0, 0, 3, 0},
+      {1, 2, 4, -4},
+  }};
 
-  std::cout << A.transform(vector::standard<3>(1)) << "\n";
-  std::cout << A.transform(vector::standard<3>(2)) << "\n";
-  std::cout << A.transform(vector::standard<3>(3)) << "\n";
+  std::cout << A << "\n";
+
+  std::cout << "det A = " << A.cofactor_expansion() << "\n";
 }
 
 void vector_tests() {
-  using namespace linear_algebra;
+  using namespace linalg;
 
-  vector a{vector::container_type{3, 0}}, b{vector::container_type{0, 2}};
-  vector x{vector::container_type{1, 0}}, y{vector::container_type{0, 1}};
+  std::vector<vector> S = {
+      vector{{1, 0, 1}},
+      vector{{2, 0, 2}},
+      vector{{1, 3, 4}},
+      vector{{-4, 0, -4}},
+  };
 
-  std::cout << "ab: " << a.dot(b) << "\n";
-  std::cout << "xy: " << x.dot(y) << "\n";
+  std::vector<vector> redundancies = vector::redundant(S);
 
-  std::cout << "is_orthogonal: " << std::boolalpha << a.is_orthogonal(b)
-            << "\n";
-  std::cout << "is_orthonormal: " << std::boolalpha << a.is_orthonormal(b)
-            << "\n";
-
-  std::cout << "is_orthogonal: " << std::boolalpha << x.is_orthogonal(y)
-            << "\n";
-  std::cout << "is_orthonormal: " << std::boolalpha << x.is_orthonormal(y)
-            << "\n";
+  for (auto &redundancy : redundancies)
+    std::cout << redundancy << "\n";
 }
 
 int main() {
-  matrix_tests();
+  vector_tests();
 
   return 0;
 }

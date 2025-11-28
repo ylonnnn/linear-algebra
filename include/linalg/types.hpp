@@ -1,6 +1,6 @@
 #pragma once
 
-namespace linear_algebra {
+namespace linalg {
 using real = double;
 
 }
