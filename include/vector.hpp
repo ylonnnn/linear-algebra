@@ -1,98 +1,161 @@
 #pragma once
 
-#include <array>
+#include <cassert>
 #include <cmath>
 #include <cstddef>
 #include <functional>
+#include <iomanip>
+#include <iostream>
 #include <ostream>
 
 #include "types.hpp"
 
 namespace linear_algebra {
-template <size_t N> class vector {
-  using vector_container = std::array<real, N>;
-
-  vector_container container;
+class vector {
+  using vector_container = std::vector<real>;
 
 public:
   using container_type = vector_container;
 
+  vector(size_t n) { container_ = container_type(n); }
+
   vector(typename vector_container::const_iterator first,
          typename vector_container::const_iterator last) {
-    std::copy(first, last, container.begin());
+    std::copy(first, last, container_.begin());
   }
 
-  vector(vector_container &&container) : container(std::move(container)) {}
+  vector(vector_container &&container) : container_(std::move(container)) {}
 
-  size_t n() const { return container.size(); }
+  template <size_t N> static vector zero() { return container_type(N); }
+
+  template <size_t N> static vector standard(size_t k) {
+    assert(k <= N);
+
+    vector e = vector_container(N);
+    e[k - 1] = 1;
+
+    return e;
+  }
+
+  static bool is_orthogonal_set(const std::vector<vector> &set) {
+    size_t n = set.size();
+
+    for (size_t i = 0; i < n; ++i) {
+      const vector &curr = set[i];
+
+      for (size_t j = i + 1; j < n; ++j) {
+        const vector &c_pair = set[j];
+        if (!curr.is_orthogonal(c_pair))
+          return false;
+      }
+    }
+
+    return true;
+  }
+
+  static bool is_orthonormal_set(const std::vector<vector> &set) {
+    size_t n = set.size();
+
+    for (size_t i = 0; i < n; ++i) {
+      const vector &curr = set[i];
+
+      for (size_t j = i + 1; j < n; ++j) {
+        const vector &c_pair = set[j];
+        if (!curr.is_orthonormal(c_pair))
+          return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool is_orthogonal(const vector &vec) const { return dot(vec) == 0; }
+
+  bool is_orthonormal(const vector &vec) const {
+    return is_orthogonal(vec) && is_unit();
+  }
+
+  size_t n() const { return container_.size(); }
+
+  bool is_zero() const {
+    for (const real &x : container_)
+      if (x != 0)
+        return false;
+
+    return true;
+  }
+
+  bool is_unit() const { return norm() == 1; }
 
   /**
    * Returns the angle in radians
    */
-  real angle_between(const vector<N> &other) const {
+  real angle_between(const vector &other) const {
     real y = std::clamp(unit().dot(other.unit()), static_cast<real>(-1),
                         static_cast<real>(1));
 
     return std::acos(y);
   }
 
-  vector<N> unit() const {
-    vector<N> res(*this);
+  vector unit() const {
+    vector res(*this);
     res.mult(1.0 / res.magnitude());
 
     return res;
   }
 
-  void add(const vector<N> &other) {
+  void add(const vector &other) {
     iterate([&](real &comp, size_t i) { comp += other[i]; });
   }
 
-  vector<N> add(const vector<N> &other) const {
-    vector<N> sum(*this);
+  vector add(const vector &other) const {
+    vector sum(*this);
     sum.add(other);
 
     return sum;
   }
 
   void mult(real scalar) {
-    iterate([&](real &comp, size_t i) { comp *= scalar; });
+    iterate([&](real &comp, size_t) { comp *= scalar; });
   }
 
-  vector<N> mult(real scalar) const {
-    vector<N> prod(*this);
+  vector mult(real scalar) const {
+    vector prod(*this);
     prod.mult(scalar);
 
     return prod;
   }
 
-  real dot(const vector<N> &other) const {
+  real dot(const vector &other) const {
     auto prod = 0.0;
     iterate([&](real comp, size_t i) { prod += comp * other[i]; });
 
     return prod;
   }
 
-  real magnitude() const {
-    auto product = 0.0;
-    iterate([&](real comp, size_t) { product += std::pow(comp, 2); });
-
-    return std::sqrt(product);
-  }
+  real magnitude() const { return std::sqrt(dot(*this)); }
 
   real norm() const { return magnitude(); }
 
-  real &operator[](size_t i) { return container[i]; }
-  const real &operator[](size_t i) const { return container[i]; }
+  void normalize() { mult(1.0 / magnitude()); }
 
-  friend std::ostream &operator<<(std::ostream &os, const vector<N> &vec) {
-    os << "<";
-    const char *sep = vec.n() > 4 ? ",\n" : ", ";
+  vector normalize() const {
+    vector normalized(*this);
+    normalized.normalize();
 
-    vec.iterate([&](real comp, size_t i) {
-      os << comp << (i == vec.n() - 1 ? "" : sep);
-    });
+    return normalized;
+  }
 
-    return os << ">";
+  real &operator[](size_t i) { return container_[i]; }
+  const real &operator[](size_t i) const { return container_[i]; }
+
+  friend std::ostream &operator<<(std::ostream &os, const vector &vec) {
+    os << "[\n";
+
+    vec.iterate(
+        [&](real comp, size_t i) { os << std::setw(8) << comp << "\n"; });
+
+    return os << "]";
   }
 
 protected:
@@ -100,14 +163,17 @@ protected:
   using vector_const_iterator_fn = std::function<void(real, size_t)>;
 
   void iterate(const vector_iterator_fn &fn) {
-    for (size_t i = 0; i < container.size(); ++i)
-      fn(container[i], i);
+    for (size_t i = 0; i < container_.size(); ++i)
+      fn(container_[i], i);
   }
 
   void iterate(const vector_const_iterator_fn &fn) const {
-    for (size_t i = 0; i < container.size(); ++i)
-      fn(container[i], i);
+    for (size_t i = 0; i < container_.size(); ++i)
+      fn(container_[i], i);
   }
+
+private:
+  vector_container container_{};
 };
 
 } // namespace linear_algebra
