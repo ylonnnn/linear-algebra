@@ -22,7 +22,11 @@ public:
   matrix(container_type &&__container, bool augmented = false);
   matrix(size_t M, size_t N, bool augmented = false);
 
-  static matrix rotation(real theta);
+  template <size_t N> static matrix rotation(real theta) {
+    std::cout << "error: no implementation for " << N << "-by-" << N
+              << " matrices\n";
+    exit(0);
+  }
 
   template <size_t N> static real angle(const matrix &mat) {
     std::cout << "error: no implementation for " << N << "-by-" << N
@@ -30,10 +34,16 @@ public:
     exit(0);
   }
 
+  static matrix formula(const std::vector<vector> &basis,
+                        const std::vector<vector> &output);
+
   void row(size_t i, std::vector<real> &&row);
   void row(size_t i, vector &&row);
   void column(size_t j, std::vector<real> &&col);
   void column(size_t j, vector &&col);
+
+  void rows(const std::vector<vector> &rows);
+  void columns(const std::vector<vector> &cols);
 
   size_t M() const;
   size_t N() const;
@@ -47,7 +57,11 @@ public:
   bool is_square() const;
   bool is_orthogonal() const;
 
-  matrix transpose();
+  matrix transpose() const;
+  matrix T() const;
+
+  matrix pseudo_inverse() const;
+
   matrix augment(vector &&b) const;
 
   void add(const matrix &other);
@@ -57,20 +71,7 @@ public:
   matrix mult(real scalar) const;
 
   // m x p * p x n = m x n
-  template <size_t _N_> matrix mult(const matrix &other) const {
-    container_type underlying_arr;
-
-    for (size_t k = 0; k < M_; k++) {
-      auto row = row_vec(k + 1);
-
-      for (size_t l = 0; l < _N_; ++l) {
-        auto col = other.col_vec(l + 1);
-        underlying_arr[k][l] = row.dot(col);
-      }
-    }
-
-    return matrix(std::move(underlying_arr));
-  }
+  matrix mult(const matrix &other) const;
 
   /**
    * Type I - E_ij
@@ -123,7 +124,16 @@ public:
   std::vector<vector> null_space();
 
   real cofactor_expansion();
-  vector transform(vector &&x) const;
+
+  vector transform(const vector &x) const;
+
+  matrix operator+(const matrix &b) const;
+
+  matrix operator-() const;
+  matrix operator-(const matrix &b) const;
+
+  matrix operator*(real b) const;
+  matrix operator*(const matrix &b) const;
 
   friend std::ostream &operator<<(std::ostream &os, const matrix &mat);
 

@@ -2,6 +2,7 @@
 #include <limits>
 
 #include "linalg/matrix.hpp"
+#include "linalg/utils.hpp"
 #include "linalg/vector.hpp"
 
 namespace linalg {
@@ -18,20 +19,29 @@ matrix::matrix(size_t M, size_t N, bool augmented)
     row.resize(N_);
 }
 
-matrix matrix::rotation(real theta) {
-  real cosine = cos(theta);
-  if (std::abs(cosine) < std::numeric_limits<real>::epsilon())
-    cosine = 0;
+template <> matrix matrix::rotation<2>(real theta) {
+  real cosine = utils::cos(theta), sine = utils::sin(theta);
 
   return matrix({
-      {cosine, -sin(theta)}, // [cos, -sin]
-      {sin(theta), cosine},  // [sin,  cos]
+      {cosine, -sine}, // [cos, -sin]
+      {sine, cosine},  // [sin,  cos]
   });
 }
 
 template <> real matrix::angle<2>(const matrix &mat) {
   assert(mat.is_orthogonal());
-  return acos(mat.entry(1, 1));
+  return utils::sign(mat.entry(2, 1)) * acos(mat.entry(1, 1));
+}
+
+matrix matrix::formula(const std::vector<vector> &basis,
+                       const std::vector<vector> &output) {
+  size_t n = basis.size(), m = output.size();
+  matrix b_mat{basis[0].n(), n}, o_mat{output[0].n(), m};
+
+  b_mat.columns(basis);
+  o_mat.columns(output);
+
+  return o_mat.mult(b_mat.pseudo_inverse());
 }
 
 void matrix::row(size_t i, std::vector<real> &&row) {
@@ -45,7 +55,6 @@ void matrix::row(size_t i, vector &&row) {
 }
 
 void matrix::column(size_t j, std::vector<real> &&col) {
-  std::cout << j << " | " << N_ << "\n";
   assert(j <= N_);
 
   for (size_t i = 0; i < M_; ++i)
@@ -54,6 +63,16 @@ void matrix::column(size_t j, std::vector<real> &&col) {
 
 void matrix::column(size_t j, vector &&col) {
   column(j, std::move(col.container_));
+}
+
+void matrix::rows(const std::vector<vector> &rows) {
+  for (size_t i = 0; i < rows.size(); ++i)
+    row(i + 1, vector::container_type(rows[i].container_));
+}
+
+void matrix::columns(const std::vector<vector> &cols) {
+  for (size_t j = 0; j < cols.size(); ++j)
+    column(j + 1, vector::container_type(cols[j].container_));
 }
 
 size_t matrix::M() const { return M_; }
@@ -100,7 +119,7 @@ bool matrix::is_orthogonal() const {
   return vector::is_orthonormal_set(set);
 }
 
-matrix matrix::transpose() {
+matrix matrix::transpose() const {
   matrix mat(N_, M_);
 
   for (size_t i = 1; i <= M_; ++i)
@@ -108,6 +127,13 @@ matrix matrix::transpose() {
       mat.entry(j, i) = entry(i, j);
 
   return mat;
+}
+
+matrix matrix::T() const { return transpose(); }
+
+matrix matrix::pseudo_inverse() const {
+  matrix _T = T();
+  return (_T * *this).invert() * _T;
 }
 
 matrix matrix::augment(vector &&b) const {
@@ -147,6 +173,20 @@ matrix matrix::mult(real scalar) const {
   prod.mult(scalar);
 
   return prod;
+}
+matrix matrix::mult(const matrix &other) const {
+  matrix mat(M_, other.N_);
+
+  for (size_t k = 0; k < M_; k++) {
+    auto row = row_vec(k + 1);
+
+    for (size_t l = 0; l < other.N_; ++l) {
+      auto col = other.col_vec(l + 1);
+      mat.entry(k + 1, l + 1) = row.dot(col);
+    }
+  }
+
+  return mat;
 }
 
 matrix matrix::invert() {
@@ -288,7 +328,7 @@ std::vector<vector> matrix::solve_linear(vector &&b) {
   std::map<size_t, real> pivots = augmented.gauss_jordan();
   size_t pn = pivots.size();
 
-  std::cout << "A = " << augmented << "\n";
+  std::cout << "augmented: " << augmented << "\n";
 
   std::vector<vector> solution;
 
@@ -370,7 +410,7 @@ real matrix::cofactor_expansion() {
   }
 }
 
-vector matrix::transform(vector &&x) const {
+vector matrix::transform(const vector &x) const {
   assert(N_ == x.n());
 
   vector y(M_);
@@ -384,6 +424,15 @@ vector matrix::transform(vector &&x) const {
 
   return y;
 }
+
+matrix matrix::operator+(const matrix &b) const { return add(b); }
+
+matrix matrix::operator-() const { return *this * -1; }
+matrix matrix::operator-(const matrix &b) const { return add(-b); }
+
+matrix matrix::operator*(real b) const { return mult(b); }
+
+matrix matrix::operator*(const matrix &b) const { return mult(b); }
 
 std::ostream &operator<<(std::ostream &os, const matrix &mat) {
   os << "[";

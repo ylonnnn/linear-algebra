@@ -174,7 +174,7 @@ vector vector::operator/(real b) const { return mult(1.0 / b); }
 std::ostream &operator<<(std::ostream &os, const vector &vec) {
   os << "[\n";
 
-  vec.iterate([&](real comp, size_t i) { os << std::setw(8) << comp << "\n"; });
+  vec.iterate([&](real comp, size_t) { os << std::setw(8) << comp << "\n"; });
 
   return os << "]";
 }
