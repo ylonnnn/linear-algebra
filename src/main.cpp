@@ -19,7 +19,7 @@ void matrix_tests() {
   std::cout << R_.is_orthogonal() << "\n";
 
   std::cout << "Angle of Rotation (Degrees): "
-            << angle::from_radian(matrix::angle<2>(R_)) << "\n";
+            << angle::rad_to_deg(matrix::angle<2>(R_)) << "\n";
 }
 
 void vector_tests() {

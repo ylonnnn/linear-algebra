@@ -3,8 +3,8 @@
 #include "linalg/types.hpp"
 
 namespace linalg::angle {
-real to_radian(real degree);
+real deg_to_rad(real degree);
 
-real from_radian(real radian);
+real rad_to_deg(real radian);
 
 } // namespace linalg::angle
