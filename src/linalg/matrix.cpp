@@ -106,6 +106,15 @@ vector matrix::col_vec(size_t j) const {
 
 bool matrix::is_square() const { return M_ == N_; }
 
+bool matrix::is_singular() const {
+  std::vector<vector> columns;
+  for (size_t i = 0; i < N_; ++i)
+    columns.push_back(col_vec(i + 1));
+
+  std::map<size_t, real> pivots = matrix(*this).gaussian();
+  return pivots.size() < N_;
+}
+
 bool matrix::is_orthogonal() const {
   if (!is_square()) // Orthogonal matrices must always be square
     return false;
@@ -133,7 +142,10 @@ matrix matrix::T() const { return transpose(); }
 
 matrix matrix::pseudo_inverse() const {
   matrix _T = T();
-  return (_T * *this).invert() * _T;
+  if (is_square() && !is_singular())
+    return invert();
+
+  return _T * (*this * _T).pseudo_inverse();
 }
 
 matrix matrix::augment(vector &&b) const {
@@ -189,7 +201,7 @@ matrix matrix::mult(const matrix &other) const {
   return mat;
 }
 
-matrix matrix::invert() {
+matrix matrix::invert() const {
   // Inversion can only be done on square matrices
   assert(is_square());
 

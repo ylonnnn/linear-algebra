@@ -55,6 +55,8 @@ public:
   vector col_vec(size_t j) const;
 
   bool is_square() const;
+  bool is_singular() const;
+
   bool is_orthogonal() const;
 
   matrix transpose() const;
@@ -110,7 +112,7 @@ public:
       container_[i - 1][k] += scalar * container_[j - 1][k];
   }
 
-  matrix invert();
+  matrix invert() const;
 
   /**
    * Returns the vector of pairs of pivots and their indices
