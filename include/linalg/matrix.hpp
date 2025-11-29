@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <cmath>
 #include <cstddef>
 #include <cstdlib>
 #include <iostream>
@@ -21,6 +22,14 @@ public:
   matrix(container_type &&__container, bool augmented = false);
   matrix(size_t M, size_t N, bool augmented = false);
 
+  static matrix rotation(real theta);
+
+  template <size_t N> static real angle(const matrix &mat) {
+    std::cout << "error: no implementation for " << N << "-by-" << N
+              << " matrices\n";
+    exit(0);
+  }
+
   void row(size_t i, std::vector<real> &&row);
   void row(size_t i, vector &&row);
   void column(size_t j, std::vector<real> &&col);
@@ -34,6 +43,9 @@ public:
 
   vector row_vec(size_t i) const;
   vector col_vec(size_t j) const;
+
+  bool is_square() const;
+  bool is_orthogonal() const;
 
   matrix transpose();
   matrix augment(vector &&b) const;

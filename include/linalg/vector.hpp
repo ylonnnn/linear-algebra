@@ -36,6 +36,9 @@ public:
 
   static std::vector<vector> redundant(const std::vector<vector> &set);
 
+  static bool is_orthogonal_set(const std::vector<vector> &set);
+  static bool is_orthonormal_set(const std::vector<vector> &set);
+
   bool is_orthogonal(const vector &vec) const;
   bool is_orthonormal(const vector &vec) const;
 

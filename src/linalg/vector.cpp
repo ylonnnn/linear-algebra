@@ -1,6 +1,7 @@
 #include <iomanip>
 
 #include "linalg/matrix.hpp"
+#include "linalg/utils.hpp"
 #include "linalg/vector.hpp"
 
 namespace linalg {
@@ -40,6 +41,38 @@ std::vector<vector> vector::redundant(const std::vector<vector> &set) {
   return redundancies;
 }
 
+bool vector::is_orthogonal_set(const std::vector<vector> &set) {
+  size_t n = set.size();
+
+  for (size_t i = 0; i < n; ++i) {
+    const vector &curr = set[i];
+
+    for (size_t j = i + 1; j < n; ++j) {
+      const vector &c_pair = set[j];
+      if (!curr.is_orthogonal(c_pair))
+        return false;
+    }
+  }
+
+  return true;
+}
+
+bool vector::is_orthonormal_set(const std::vector<vector> &set) {
+  size_t n = set.size();
+
+  for (size_t i = 0; i < n; ++i) {
+    const vector &curr = set[i];
+
+    for (size_t j = i + 1; j < n; ++j) {
+      const vector &c_pair = set[j];
+      if (!curr.is_orthonormal(c_pair))
+        return false;
+    }
+  }
+
+  return true;
+}
+
 bool vector::is_orthogonal(const vector &vec) const { return dot(vec) == 0; }
 
 bool vector::is_orthonormal(const vector &vec) const {
@@ -65,7 +98,7 @@ bool vector::is_zero() const {
   return true;
 }
 
-bool vector::is_unit() const { return norm() == 1; }
+bool vector::is_unit() const { return utils::approx_eq(norm(), 1); }
 
 /**
  * Returns the angle in radians

@@ -1,8 +1,11 @@
 #include <iomanip>
+#include <limits>
 
 #include "linalg/matrix.hpp"
+#include "linalg/vector.hpp"
 
 namespace linalg {
+
 matrix::matrix(container_type &&__container, bool augmented)
     : M_(__container.size()), N_(__container[0].size() + augmented),
       container_(std::move(__container)), augmented_(augmented) {}
@@ -13,6 +16,22 @@ matrix::matrix(size_t M, size_t N, bool augmented)
 
   for (auto &row : container_)
     row.resize(N_);
+}
+
+matrix matrix::rotation(real theta) {
+  real cosine = cos(theta);
+  if (std::abs(cosine) < std::numeric_limits<real>::epsilon())
+    cosine = 0;
+
+  return matrix({
+      {cosine, -sin(theta)}, // [cos, -sin]
+      {sin(theta), cosine},  // [sin,  cos]
+  });
+}
+
+template <> real matrix::angle<2>(const matrix &mat) {
+  assert(mat.is_orthogonal());
+  return acos(mat.entry(1, 1));
 }
 
 void matrix::row(size_t i, std::vector<real> &&row) {
@@ -66,6 +85,21 @@ vector matrix::col_vec(size_t j) const {
   return vector(std::move(underlying_arr));
 }
 
+bool matrix::is_square() const { return M_ == N_; }
+
+bool matrix::is_orthogonal() const {
+  if (!is_square()) // Orthogonal matrices must always be square
+    return false;
+
+  std::vector<vector> set;
+  set.reserve(M_);
+
+  for (auto &row : container_)
+    set.emplace_back(vector::container_type(row));
+
+  return vector::is_orthonormal_set(set);
+}
+
 matrix matrix::transpose() {
   matrix mat(N_, M_);
 
@@ -117,7 +151,7 @@ matrix matrix::mult(real scalar) const {
 
 matrix matrix::invert() {
   // Inversion can only be done on square matrices
-  assert(M_ == N_);
+  assert(is_square());
 
   // [A | In];
   matrix temp(M_, N_ * 2);
@@ -301,7 +335,7 @@ std::vector<vector> matrix::null_space() {
 }
 
 real matrix::cofactor_expansion() {
-  assert(M_ == N_);
+  assert(is_square());
 
   if (M_ == 1)
     return entry(1, 1);

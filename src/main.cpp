@@ -1,21 +1,25 @@
 #include <cmath>
 #include <iostream>
 
+#include "linalg/angle.hpp"
 #include "linalg/matrix.hpp"
 #include "linalg/vector.hpp"
 
 void matrix_tests() {
   using namespace linalg;
 
-  matrix A{{
-      {1, 2, 1, -4},
-      {0, 0, 3, 0},
-      {1, 2, 4, -4},
+  auto R_ = matrix{{
+      {-sqrt(3) / 2, -1.0 / 2},
+      {1.0 / 2, -sqrt(3) / 2},
   }};
 
-  std::cout << A << "\n";
+  std::cout << std::boolalpha;
 
-  std::cout << "det A = " << A.cofactor_expansion() << "\n";
+  std::cout << R_.is_square() << "\n";
+  std::cout << R_.is_orthogonal() << "\n";
+
+  std::cout << "Angle of Rotation (Degrees): "
+            << angle::from_radian(matrix::angle<2>(R_)) << "\n";
 }
 
 void vector_tests() {
@@ -35,7 +39,7 @@ void vector_tests() {
 }
 
 int main() {
-  vector_tests();
+  matrix_tests();
 
   return 0;
 }
