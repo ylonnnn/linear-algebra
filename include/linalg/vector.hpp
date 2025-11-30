@@ -39,6 +39,9 @@ public:
   static bool is_orthogonal_set(const std::vector<vector> &set);
   static bool is_orthonormal_set(const std::vector<vector> &set);
 
+  static std::vector<vector> gram_schmidt(const std::vector<vector> &set,
+                                          bool normalized = false);
+
   bool is_orthogonal(const vector &vec) const;
   bool is_orthonormal(const vector &vec) const;
 
@@ -77,6 +80,9 @@ public:
   vector operator*(const vector &b) const;
   vector operator*(real b) const;
   vector operator/(real b) const;
+
+  vector &operator+=(const vector &b);
+  vector &operator-=(const vector &b);
 
   friend std::ostream &operator<<(std::ostream &os, const vector &vec);
 

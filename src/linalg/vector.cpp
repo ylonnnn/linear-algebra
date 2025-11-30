@@ -73,6 +73,34 @@ bool vector::is_orthonormal_set(const std::vector<vector> &set) {
   return true;
 }
 
+std::vector<vector> vector::gram_schmidt(const std::vector<vector> &set,
+                                         bool normalized) {
+  size_t m = set.size();
+  matrix mat(m, set[0].n());
+
+  mat.columns(set);
+
+  std::vector<vector> o_set = mat.column_space();
+
+  // Normalize first vector as well
+  if (normalized)
+    o_set[0].normalize();
+
+  for (size_t k = 1; k < o_set.size(); ++k) {
+    vector &vk = o_set[k];
+
+    for (size_t i = 0; i <= k - 1; ++i) {
+      vector &wi = o_set[i];
+      vk -= vk.projection(wi);
+    }
+
+    if (normalized)
+      vk.normalize();
+  }
+
+  return o_set;
+}
+
 bool vector::is_orthogonal(const vector &vec) const { return dot(vec) == 0; }
 
 bool vector::is_orthonormal(const vector &vec) const {
@@ -110,12 +138,7 @@ real vector::angle_between(const vector &other) const {
   return std::acos(y);
 }
 
-vector vector::unit() const {
-  vector res(*this);
-  res.mult(1.0 / res.magnitude());
-
-  return res;
-}
+vector vector::unit() const { return normalize(); }
 
 void vector::add(const vector &other) {
   iterate([&](real &comp, size_t i) { comp += other[i]; });
@@ -171,10 +194,16 @@ vector vector::operator*(real b) const { return mult(b); }
 
 vector vector::operator/(real b) const { return mult(1.0 / b); }
 
+vector &vector::operator+=(const vector &b) { return *this = *this + b; }
+
+vector &vector::operator-=(const vector &b) { return *this = *this - b; }
+
 std::ostream &operator<<(std::ostream &os, const vector &vec) {
   os << "[\n";
 
-  vec.iterate([&](real comp, size_t) { os << std::setw(8) << comp << "\n"; });
+  vec.iterate([&](real comp, size_t) {
+    os << std::setw(8) << std::setprecision(4) << comp << "\n";
+  });
 
   return os << "]";
 }
