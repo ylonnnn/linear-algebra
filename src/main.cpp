@@ -9,19 +9,14 @@ void matrix_tests() {
   //
   using namespace linalg;
 
-  matrix T = matrix::formula(
-      {
-          {{-1, 1, 1}},
-          {{1, -1, 1}},
-          {{1, 1, -1}},
-      },
-      {
-          {{-2, 0}},
-          {{-4, 2}},
-          {{6, 2}},
-      });
+  matrix A{{
+      {1, 1, -1},
+      {-1, -1, -1},
+      {1, -1, -1},
+  }};
 
-  std::cout << T << "\n";
+  std::cout << A.cofactor_expansion() << "\n";
+  std::cout << A.gaussian_diagonal_det() << "\n";
 }
 
 void vector_tests() {
@@ -40,7 +35,7 @@ void vector_tests() {
 }
 
 int main() {
-  vector_tests();
+  matrix_tests();
 
   return 0;
 }

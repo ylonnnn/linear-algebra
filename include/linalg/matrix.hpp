@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <iostream>
 #include <map>
@@ -118,6 +119,7 @@ public:
    * Returns the vector of pairs of pivots and their indices
    */
   std::map<size_t, real> gaussian();
+  std::map<size_t, real> gaussian(uint32_t &row_swaps);
   std::map<size_t, real> gauss_jordan();
 
   std::vector<vector> solve_linear(vector &&b);
@@ -125,7 +127,8 @@ public:
   std::vector<vector> column_space();
   std::vector<vector> null_space();
 
-  real cofactor_expansion();
+  real cofactor_expansion() const;
+  real gaussian_diagonal_det() const;
 
   vector transform(const vector &x) const;
 

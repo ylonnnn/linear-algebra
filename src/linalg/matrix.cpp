@@ -239,10 +239,12 @@ matrix matrix::invert() const {
   return inverted;
 }
 
-/**
- * Returns the vector of pairs of pivots and their indices
- */
 std::map<size_t, real> matrix::gaussian() {
+  uint32_t swaps;
+  return gaussian(swaps);
+}
+
+std::map<size_t, real> matrix::gaussian(uint32_t &row_swaps) {
   size_t _N_ = N_ - augmented_;
 
   std::map<size_t, real> pivots;
@@ -257,8 +259,10 @@ std::map<size_t, real> matrix::gaussian() {
       if (std::abs(container_[j][p_idx]) > std::abs(container_[max_row][p_idx]))
         max_row = j;
 
-    if (max_row != i)
+    if (max_row != i) {
       elementary<1>(i + 1, max_row + 1);
+      ++row_swaps;
+    }
 
     std::vector<real> &row = container_[i];
 
@@ -386,7 +390,7 @@ std::vector<vector> matrix::null_space() {
   return solve_linear(vector::zero(M_));
 }
 
-real matrix::cofactor_expansion() {
+real matrix::cofactor_expansion() const {
   assert(is_square());
 
   if (M_ == 1)
@@ -420,6 +424,21 @@ real matrix::cofactor_expansion() {
 
     return determinant;
   }
+}
+
+real matrix::gaussian_diagonal_det() const {
+  assert(is_square());
+
+  uint32_t swaps = 0;
+  std::map<size_t, real> piv_map = matrix(*this).gaussian(swaps);
+
+  auto it = piv_map.begin();
+  real det = it->second;
+
+  for (; it != piv_map.end(); ++it)
+    det *= it->second;
+
+  return det * std::pow(-1, swaps);
 }
 
 vector matrix::transform(const vector &x) const {
